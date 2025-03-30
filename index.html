@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Risk-Reward Calculator - zpaya</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 20px;
+        }
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .input-box {
+            background-color: #e8f4f8;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: left;
+            margin-bottom: 15px;
+        }
+        .input-box label {
+            display: block;
+            margin: 10px 0;
+            font-weight: bold;
+        }
+        .input-box input {
+            width: calc(100% - 20px);
+            padding: 8px;
+            margin: 5px 0;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .calculate-btn {
+            margin-top: 10px;
+            padding: 10px;
+            width: 100%;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .calculate-btn:hover {
+            background: #218838;
+        }
+        .result-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            text-align: left;
+            margin: 15px 0;
+            border: 1px solid #dee2e6;
+        }
+        .red-text {
+            color: #dc3545;
+            font-weight: bold;
+        }
+        .green-text {
+            color: #28a745;
+            font-weight: bold;
+        }
+        .input-controls {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .input-controls button {
+            padding: 5px 10px;
+            background-color: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .input-controls button:hover {
+            background-color: #5a6268;
+        }
+        .input-controls input {
+            width: 60px;
+            text-align: center;
+        }
+        
+        /* Carousel Styles */
+        .carousel-container {
+            position: relative;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        .carousel-slide {
+            display: none;
+            width: 100%;
+            transition: transform 0.5s ease;
+        }
+        .carousel-slide.active {
+            display: block;
+        }
+        .carousel-nav {
+            text-align: center;
+            margin-top: 10px;
+        }
+        .carousel-dot {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            margin: 0 5px;
+            background-color: #bbb;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        .carousel-dot.active {
+            background-color: #4CAF50;
+        }
+        .carousel-arrow {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            z-index: 10;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .carousel-arrow:hover {
+            background-color: rgba(0,0,0,0.8);
+        }
+        .carousel-arrow.prev {
+            left: 10px;
+        }
+        .carousel-arrow.next {
+            right: 10px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h2>Risk-Reward Calculator</h2>
+
+        <div class="input-box">
+            <label><b>Symbol:</b> <input type="text" id="symbol" placeholder="e.g. AAPL"></label>
+            <label><b>Share Price (₹):</b> <input type="number" id="sharePrice" value="1000" step="0.01"></label>
+            <label><b>Portfolio Size (₹):</b> <input type="number" id="portfolioSize" value="100000" step="1"></label>
+            <label><b>Position Size (%):</b> <input type="number" id="positionSize" value="12" min="0" max="100"></label>
+            <label>
+                <b>Stop Loss (%):</b>
+                <div class="input-controls">
+                    <button type="button" id="minus">-</button>
+                    <input type="number" id="stopLoss" value="4" min="0" step="0.5">
+                    <button type="button" id="plus">+</button>
+                </div>
+            </label>
+            <button class="calculate-btn" onclick="calculateRiskReward()">Calculate Risk/Reward</button>
+        </div>
+        
+        <div class="result-box">
+            <table>
+                <tr>
+                    <td><b>₹ Amount Position:</b></td>
+                    <td id="amtPosition">-</td>
+                </tr>
+                <tr>
+                    <td><b># of Shares to Buy:</b></td>
+                    <td id="sharesToBuy">-</td>
+                </tr>
+                <tr>
+                    <td><b>Stop Loss Price:</b></td>
+                    <td id="stopPrice" class="red-text">-</td>
+                </tr>
+                <tr>
+                    <td><b>Target 3R Price:</b></td>
+                    <td id="target3r" class="green-text">-</td>
+                </tr>
+                <tr>
+                    <td><b>₹ Stop Amount:</b></td>
+                    <td id="stopAmount">-</td>
+                </tr>
+                <tr>
+                    <td><b>Risk as % of Equity:</b></td>
+                    <td id="riskEquity">-</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Carousel for Risk-Reward Tables -->
+        <div class="carousel-container">
+            <button class="carousel-arrow prev" onclick="prevSlide()">❮</button>
+            
+            <!-- Table 1 (1R-5R) -->
+            <div class="carousel-slide active">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>1R (Risk)</th>
+                            <th>2R</th>
+                            <th>3R</th>
+                            <th>4R</th>
+                            <th>5R</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td id="r1">-</td>
+                            <td id="r2">-</td>
+                            <td id="r3">-</td>
+                            <td id="r4">-</td>
+                            <td id="r5">-</td>
+                        </tr>
+                        <tr>
+                            <td id="price1">-</td>
+                            <td id="price2">-</td>
+                            <td id="price3" class="green-text">-</td>
+                            <td id="price4">-</td>
+                            <td id="price5">-</td>
+                        </tr>
+                        <tr>
+                            <td>% Gain</td>
+                            <td id="gain2">-</td>
+                            <td id="gain3">-</td>
+                            <td id="gain4">-</td>
+                            <td id="gain5">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Table 2 (6R-10R) -->
+            <div class="carousel-slide">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>6R</th>
+                            <th>7R</th>
+                            <th>8R</th>
+                            <th>9R</th>
+                            <th>10R</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td id="r6">-</td>
+                            <td id="r7">-</td>
+                            <td id="r8">-</td>
+                            <td id="r9">-</td>
+                            <td id="r10">-</td>
+                        </tr>
+                        <tr>
+                            <td id="price6">-</td>
+                            <td id="price7">-</td>
+                            <td id="price8">-</td>
+                            <td id="price9">-</td>
+                            <td id="price10">-</td>
+                        </tr>
+                        <tr>
+                            <td id="gain6">-</td>
+                            <td id="gain7">-</td>
+                            <td id="gain8">-</td>
+                            <td id="gain9">-</td>
+                            <td id="gain10">-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <button class="carousel-arrow next" onclick="nextSlide()">❯</button>
+            
+            <div class="carousel-nav">
+                <span class="carousel-dot active" onclick="goToSlide(0)"></span>
+                <span class="carousel-dot" onclick="goToSlide(1)"></span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Carousel functionality
+        let currentSlide = 0;
+        const slides = document.querySelectorAll('.carousel-slide');
+        const dots = document.querySelectorAll('.carousel-dot');
+        
+        function showSlide(n) {
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+            
+            currentSlide = (n + slides.length) % slides.length;
+            slides[currentSlide].classList.add('active');
+            dots[currentSlide].classList.add('active');
+        }
+        
+        function nextSlide() {
+            showSlide(currentSlide + 1);
+        }
+        
+        function prevSlide() {
+            showSlide(currentSlide - 1);
+        }
+        
+        function goToSlide(n) {
+            showSlide(n);
+        }
+        
+        // Calculator functionality
+        function calculateRiskReward() {
+            let sharePrice = parseFloat(document.getElementById("sharePrice").value);
+            let portfolioSize = parseFloat(document.getElementById("portfolioSize").value);
+            let positionSizePercent = parseFloat(document.getElementById("positionSize").value);
+            let stopLossPercent = parseFloat(document.getElementById("stopLoss").value);
+            let stopLossAmount = (sharePrice * stopLossPercent) / 100;
+
+            if (isNaN(sharePrice) || isNaN(portfolioSize) || isNaN(positionSizePercent) || isNaN(stopLossPercent)) {
+                alert("Please enter valid numbers.");
+                return;
+            }
+
+            // Calculate basic values
+            let amtPosition = (portfolioSize * positionSizePercent) / 100;
+            let sharesToBuy = Math.floor(amtPosition / sharePrice);
+            let stopPrice = sharePrice - (sharePrice * stopLossPercent) / 100;
+            let target3r = sharePrice + stopLossAmount * 3;
+            let stopAmount = (amtPosition * stopLossPercent) / 100;
+            let riskEquity = (stopAmount / portfolioSize) * 100;
+
+            // Update basic info table
+            document.getElementById("amtPosition").textContent = `₹${amtPosition.toFixed(2)}`;
+            document.getElementById("sharesToBuy").textContent = sharesToBuy;
+            document.getElementById("stopPrice").textContent = stopPrice.toFixed(2);
+            document.getElementById("target3r").textContent = target3r.toFixed(2);
+            document.getElementById("stopAmount").textContent = `₹${stopAmount.toFixed(2)}`;
+            document.getElementById("riskEquity").textContent = `${riskEquity.toFixed(2)}%`;
+
+            // Calculate Risk-Reward Levels (1R, 2R, ..., 10R)
+            document.getElementById("r1").textContent = stopLossAmount.toFixed(2);
+            document.getElementById("r2").textContent = (stopLossAmount * 2).toFixed(2);
+            document.getElementById("r3").textContent = (stopLossAmount * 3).toFixed(2);
+            document.getElementById("r4").textContent = (stopLossAmount * 4).toFixed(2);
+            document.getElementById("r5").textContent = (stopLossAmount * 5).toFixed(2);
+            document.getElementById("r6").textContent = (stopLossAmount * 6).toFixed(2);
+            document.getElementById("r7").textContent = (stopLossAmount * 7).toFixed(2);
+            document.getElementById("r8").textContent = (stopLossAmount * 8).toFixed(2);
+            document.getElementById("r9").textContent = (stopLossAmount * 9).toFixed(2);
+            document.getElementById("r10").textContent = (stopLossAmount * 10).toFixed(2);
+
+            // Calculate Target Prices
+            document.getElementById("price1").textContent = (sharePrice + stopLossAmount).toFixed(2);
+            document.getElementById("price2").textContent = (sharePrice + stopLossAmount * 2).toFixed(2);
+            document.getElementById("price3").textContent = (sharePrice + stopLossAmount * 3).toFixed(2);
+            document.getElementById("price4").textContent = (sharePrice + stopLossAmount * 4).toFixed(2);
+            document.getElementById("price5").textContent = (sharePrice + stopLossAmount * 5).toFixed(2);
+            document.getElementById("price6").textContent = (sharePrice + stopLossAmount * 6).toFixed(2);
+            document.getElementById("price7").textContent = (sharePrice + stopLossAmount * 7).toFixed(2);
+            document.getElementById("price8").textContent = (sharePrice + stopLossAmount * 8).toFixed(2);
+            document.getElementById("price9").textContent = (sharePrice + stopLossAmount * 9).toFixed(2);
+            document.getElementById("price10").textContent = (sharePrice + stopLossAmount * 10).toFixed(2);
+
+            // Calculate % Gain
+            document.getElementById("gain2").textContent = (stopLossPercent * 2).toFixed(0) + "%";
+            document.getElementById("gain3").textContent = (stopLossPercent * 3).toFixed(0) + "%";
+            document.getElementById("gain4").textContent = (stopLossPercent * 4).toFixed(0) + "%";
+            document.getElementById("gain5").textContent = (stopLossPercent * 5).toFixed(0) + "%";
+            document.getElementById("gain6").textContent = (stopLossPercent * 6).toFixed(0) + "%";
+            document.getElementById("gain7").textContent = (stopLossPercent * 7).toFixed(0) + "%";
+            document.getElementById("gain8").textContent = (stopLossPercent * 8).toFixed(0) + "%";
+            document.getElementById("gain9").textContent = (stopLossPercent * 9).toFixed(0) + "%";
+            document.getElementById("gain10").textContent = (stopLossPercent * 10).toFixed(0) + "%";
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const stopLossInput = document.getElementById('stopLoss');
+            const minusButton = document.getElementById('minus');
+            const plusButton = document.getElementById('plus');
+          
+            minusButton.addEventListener('click', function() {
+                let currentValue = parseFloat(stopLossInput.value);
+                if (!isNaN(currentValue)) {
+                    stopLossInput.value = Math.max(0, (currentValue - 0.5)).toFixed(1);
+                }
+            });
+          
+            plusButton.addEventListener('click', function() {
+                let currentValue = parseFloat(stopLossInput.value);
+                if (!isNaN(currentValue)) {
+                    stopLossInput.value = (currentValue + 0.5).toFixed(1);
+                }
+            });
+            
+            // Calculate on load with default values
+            calculateRiskReward();
+        });
+    </script>
+</body>
+</html>
